@@ -125,6 +125,9 @@
     };
   };
 
+  services.tailscale.enable = true;
+  services.glances.enable = true;
+
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
