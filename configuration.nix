@@ -118,10 +118,42 @@
     openFirewall = true;
   };
 
-  services.nginx = {
+  services.caddy = {
     enable = true;
-    virtualHosts."rd-srv-atlas.lab" = {
-      root = "/srv/www/default";
+    package = pkgs.caddy.withPlugins {
+      plugins = [ "github.com/caddy-dns/porkbun@v0.3.1" ];
+      hash = "sha256-R1ZqQ8drcBQIH7cLq9kEvdg9Ze3bKkT8IAFavldVeC0=";
+    }; 
+    globalConfig = ''    
+      auto_https prefer_wildcard
+
+      cert_issuer acme {
+        dns porkbun {
+          api_key {env.PORKBUN_API_KEY}
+          api_secret_key {env.PORKBUN_API_SECRET_KEY}
+        }
+        resolvers 1.1.1.1 8.8.8.8
+      }
+    '';
+    virtualHosts."lab.rdrachmanto.dev".extraConfig = ''
+      respond "Hello from caddy!"
+    '';
+    virtualHosts."glances.lab.rdrachmanto.dev".extraConfig = ''
+      reverse_proxy http://127.0.0.1:61208
+    '';
+  };
+  systemd.services.caddy.serviceConfig.EnvironmentFile = ["/etc/caddy/envfile"];
+
+  services.dnsmasq = {
+    enable = true;
+    settings = {
+      interface = "tailscale0";
+      bind-interfaces = true;
+
+      address = "/lab.rdrachmanto.dev/100.125.252.49";
+
+      domain-needed = true;
+      bogus-priv = true;
     };
   };
 
@@ -129,7 +161,8 @@
   services.glances.enable = true;
 
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  networking.firewall.allowedTCPPorts = [ ];
+  networking.firewall.trustedInterfaces = [ "tailscale0" ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
