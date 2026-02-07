@@ -8,7 +8,7 @@
 
 ### Setup
 
-1. Do =tailscale up= and log in
+1. Do `tailscale up` and log in
 2. Get the tailscale IP of the homelab, i.e. `100.100.49.81`
 3. Change the entry in `configuration.nix`
 
@@ -19,7 +19,7 @@ services.dnsmasq = {
 };
 ```
 
-4. In the Tailscale Web Dashboard, enter Settings and add a new Split DNS nameserver pointing to the same `$TAILSCALE_IP`, set it to a subdomain of the TLD (no need for an A-records)
+4. In the Tailscale Web Dashboard, go to `Settings` tab and add a new Split DNS nameserver pointing to the same `$TAILSCALE_IP`, set it to a subdomain of the TLD (no need for an A-records)
 5. put the `API_KEY` and `API_SECRET_KEY` from the domain provider to `/etc/caddy/envfile` and make sure it has `600` permission by doing
 
 ```bash
