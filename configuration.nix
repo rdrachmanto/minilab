@@ -63,7 +63,8 @@
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    #  wget
+    wget
+    gnupg
     neovim
     git
   ];
@@ -95,7 +96,7 @@
 	"server string" = "smbnix";
 	"netbios name" = "smbnix";
 	"security" = "user";
-	"hosts allow" = "172.20. 127.0.0.1 localhost";
+	"hosts allow" = "127.0.0.1 100.";
 	"hosts deny" = "0.0.0.0/0";
 	"guest account" = "nobody";
 	"map to guest" = "bad user";
@@ -117,6 +118,10 @@
     enable = true;
     openFirewall = true;
   };
+
+  systemd.services.samba.wantedBy = [ "tailscaled.service" ];
+  systemd.services.samba.after = [ "tailscaled.service" ];
+
 
   services.caddy = {
     enable = true;
@@ -141,6 +146,9 @@
     virtualHosts."glances.lab.rdrachmanto.dev".extraConfig = ''
       reverse_proxy http://127.0.0.1:61208
     '';
+    virtualHosts."rss.lab.rdrachmanto.dev".extraConfig = ''
+      reverse_proxy http://127.0.0.1:7070
+    '';
   };
   systemd.services.caddy.serviceConfig.EnvironmentFile = ["/etc/caddy/envfile"];
 
@@ -148,8 +156,9 @@
     enable = true;
     settings = {
       interface = "tailscale0";
-      bind-interfaces = true;
+      bind-dynamic = true;
 
+      local = "/lab.rdrachmanto.dev/";
       address = "/lab.rdrachmanto.dev/100.125.252.49";
 
       domain-needed = true;
@@ -158,10 +167,15 @@
   };
 
   services.tailscale.enable = true;
+
   services.glances.enable = true;
 
+  services.yarr = {
+    enable = true;
+  };
+
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ ];
+  networking.firewall.allowedTCPPorts = [];
   networking.firewall.trustedInterfaces = [ "tailscale0" ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
